@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
@@ -7,8 +8,13 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using MLM.Audition.Domain.Services;
+using MLM.Audition.Infrastructure;
+using MLM.Audition.Infrastructure.Context;
+using MLM.Audtion.Core.Interfaces;
 
 namespace MLM.Audition
 {
@@ -31,8 +37,19 @@ namespace MLM.Audition
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
+            string dbName = Guid.NewGuid().ToString();
+            services.AddDbContext<AppDbContext>(options =>
+                options.UseInMemoryDatabase(dbName));
+
+            var container = new Container();
+
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+
+            services.AddTransient<IToDoService, ToDoItemService>();
+
+            services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -56,7 +73,7 @@ namespace MLM.Audition
             {
                 routes.MapRoute(
                     name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
+                    template: "{controller=ToDoItem}/{action=Index}/{id?}");
             });
         }
     }
